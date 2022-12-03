@@ -38,6 +38,8 @@ TeamColor1 = settings_data.get("Team_Color1")
 TeamColor2 = settings_data.get("Team_Color2")
 delay = settings_data.get("startup_delay")
 
+print(delay)
+
 pixels.fill((0,0,0)) # Have RAM Reflect the Colors of the Pixels being currently off
 
 def connectionListener(connected, info):
@@ -174,9 +176,29 @@ while NetworkTables.isConnected():
                     break
 
         if(command == 4): # Team Color Cycle
-            arg = abs(table.getNumber('Argument', arg)) # Length of Section
+            CheckDelay()
+            arg = int(abs(table.getNumber('Argument', arg))) # Length of Section
+            ClearCommands()
+            firstcolor = True
+            loc = 0
             while True:
-                for i in range(num_pixels):
-                    pixels[i] = ()
-            
+                for j in range(arg):
+                    for i in range(num_pixels):
+                        if(firstcolor):
+                            pixels[i] = (TeamColor1)
+                        else:
+                            pixels[i] = (TeamColor2)
+                        loc = loc + 1
+                        if(loc > arg+j):
+                            firstcolor = False
+                        if(loc > (2*arg)+j):
+                            firstcolor = True
+                        pixels.show()
+                        SmartWait(delay)
+                        if(command != 0):
+                            break
+                    if(command != 0):
+                        break
+                if(command != 0):
+                        break
             
