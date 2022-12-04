@@ -16,15 +16,13 @@ settings_data = json.load(settings_file)
 settings_file.close()
 
 team_number = settings_data.get("Team_Number")
-intense = settings_data.get("brightness")
 
-pixel_pin = board.D18 #GPIO to use
-
-num_pixels = settings_data.get("num_LEDs") # Number of LEDs in the strip
-
-ORDER = neopixel.GRB #Typical Order of Pixels
-
-pixels = neopixel.NeoPixel(pixel_pin, num_pixels, brightness=intense, auto_write=False, pixel_order=ORDER)
+# Loads the Pin from JSON File
+# Loads the Numbert of LEDs from the JSON File
+# Loads the Brightness from the JSON File
+# Loads the Pixel Order from the JSON File
+# Sets up the Pixel Array and Settings for the Pixels
+pixels = neopixel.NeoPixel(getattr(board, "D"+settings_data.get("Pin")), settings_data.get("num_LEDs"), brightness=settings_data.get("brightness"), auto_write=False, pixel_order=getattr(neopixel, settings_data.get("led_order")))
 
 cond = threading.Condition()
 notified = [False]
@@ -37,8 +35,6 @@ blue = settings_data.get("startup_color")[2]
 TeamColor1 = settings_data.get("Team_Color1")
 TeamColor2 = settings_data.get("Team_Color2")
 delay = settings_data.get("startup_delay")
-
-print(delay)
 
 pixels.fill((0,0,0)) # Have RAM Reflect the Colors of the Pixels being currently off
 

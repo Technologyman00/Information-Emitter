@@ -7,7 +7,7 @@
   "brightness": 0.5,
   "Team_Color1": [255, 255, 255],
   "Team_Color2": [0, 0, 0],
-  "Pin": "D18",
+  "Pin": "18",
   "num_LEDs": 9,
-  "order": "GRB"
+  "led_order": "GRB"
 }
