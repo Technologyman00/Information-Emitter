@@ -5,8 +5,8 @@
   "startup_delay": 0.001,
   "startup_arg": 0,
   "brightness": 0.5,
-  "Team_Color1": [255, 255, 255],
-  "Team_Color2": [0, 0, 0],
+  "Team_Color1": [25, 131, 70],
+  "Team_Color2": [109, 53, 232],
   "Pin": "18",
   "num_LEDs": 9,
   "led_order": "GRB"

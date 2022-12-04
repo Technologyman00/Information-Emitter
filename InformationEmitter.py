@@ -120,6 +120,9 @@ def SmartWait(delaytime_s):
         current = datetime.now()
         difference = difference = current - start
 
+def int_abs(num):
+   return int(abs(num))
+
 ClearCommands(command, arg, settings_data.get("startup_color")) # put startup commands
 table.putNumber('Delay', delay) # put default delay
 
@@ -128,15 +131,15 @@ while NetworkTables.isConnected():
         if(command == 99): # Set Team Colors
             arg = abs(table.getNumber('Argument', arg))
             if(arg == 1):
-                TeamColor1 = table.getNumberArray("Color")
+                TeamColor1 = table.getNumberArray("Color", [0,0,0])
             if(arg == 2):
-                TeamColor2 = table.getNumberArray("Color")
+                TeamColor2 = table.getNumberArray("Color", [0,0,0])
             ClearCommands()
                 
         if(command == 1): #Fill Color
-            color = able.getNumberArray('Color', [0,0,0])
+            color = table.getNumberArray('Color', [0,0,0])
             ClearCommands()
-            pixels.fill((int(abs(color[0])), int(abs(color[1])), int(abs(color[2]))))		
+            pixels.fill((int_abs(color[0]), int_abs(color[1]), int_abs(color[2])))		
             pixels.show()
             
 
@@ -145,7 +148,7 @@ while NetworkTables.isConnected():
             CheckDelay()
             ClearCommands()
             for i in range(0, num_pixels):
-                pixels[i] = (int(abs(color[0])), int(abs(color[1])), int(abs(color[2])))
+                pixels[i] = (int_abs(color[0]), int_abs(color[1]), int_abs(color[2]))
                 pixels.show()
                 SmartWait(delay)
                 if(command != 0):
@@ -170,26 +173,21 @@ while NetworkTables.isConnected():
             CheckDelay()
             arg = int(abs(table.getNumber('Argument', arg))) # Length of Section
             ClearCommands()
-            firstcolor = True
-            loc = 0
+            count = 0
             while True:
-                for j in range(arg):
-                    for i in range(num_pixels):
-                        if(firstcolor):
-                            pixels[i] = (TeamColor1)
+                for i in range(num_pixels):
+                        if(count <= arg):
+                            pixels[i] = (int_abs(TeamColor1[0]), int_abs(TeamColor1[1]), int_abs(TeamColor1[2]))
                         else:
-                            pixels[i] = (TeamColor2)
-                        loc = loc + 1
-                        if(loc > arg+j):
-                            firstcolor = False
-                        if(loc > (2*arg)+j):
-                            firstcolor = True
-                        pixels.show()
-                        SmartWait(delay)
+                            pixels[i] = (int_abs(TeamColor2[0]), int_abs(TeamColor2[1]), int_abs(TeamColor2[2]))
+                        count += 1
+
+                        if(count > (2*arg)):
+                            count = 0
+                                            
                         if(command != 0):
                             break
-                    if(command != 0):
-                        break
+                pixels.show()
+                SmartWait(delay)
                 if(command != 0):
-                        break
-            
+                    break
