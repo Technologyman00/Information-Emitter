@@ -26,6 +26,8 @@ team_number = settings_data.get("Team_Number")
 ORDER = getattr(neopixel, settings_data.get("led_order"))
 num_pixels = settings_data.get("num_LEDs")
 
+gamma = settings_data.get("gamma")
+
 pixels = neopixel.NeoPixel(getattr(board, "D"+settings_data.get("Pin")), num_pixels, brightness=settings_data.get("brightness"), auto_write=False, pixel_order=ORDER)
 
 cond = threading.Condition()
@@ -49,7 +51,6 @@ def connectionListener(connected, info):
         notified[0] = True
         cond.notify()
 
-
 # TO FIX
 # TO FIX
 # TO FIX
@@ -70,7 +71,24 @@ with cond:
 # Insert your processing code here
 print("Connected!")
 
+def valueChanged(table, key, value, isNew):
+    global command
+    global delay
+    global color
+    global arg
+    
+    if(key == 'Command'):
+        command = int(value)
+    if(key == 'Argument'):
+        arg = int(value)
+    if(key == 'Color'):
+        color = value
+    if(key == 'Delay'):
+        if(value > 0):
+            delay = abs(value)
+
 table = NetworkTables.getTable('InformationEmitter')
+table.addEntryListener(valueChanged)
 
 def wheel(pos):
     # Input a value 0 to 255 to get a color value.
@@ -114,22 +132,33 @@ def SmartWait(delaytime_s):
     current = datetime.now()
     difference = current - start
     while(difference.total_seconds() < delaytime_s):
-        command = table.getNumber('Command', 0)
+        #command = table.getNumber('Command', 0)
         if(command != 0):
             break
         current = datetime.now()
         difference = difference = current - start
 
-def int_abs(num):
-   return int(abs(num))
+def gamma_enc(color):
+    global gamma
+
+    if(gamma != 1):
+        encode_red = int(abs(((color[0]/255)**(gamma)) * 255))
+        encode_green = int(abs(((color[1]/255)**(gamma)) * 255))
+        encode_blue = int(abs(((color[2]/255)**(gamma)) * 255))
+
+        color = (encode_red, encode_green, encode_blue)
+    else:
+        color = (int(abs(color[0])), int(abs(color[1])), int(abs(color[2])))
+
+    return color
 
 ClearCommands(command, arg, settings_data.get("startup_color")) # put startup commands
 table.putNumber('Delay', delay) # put default delay
 
 while NetworkTables.isConnected():
-        command = table.getNumber('Command', 0)
+        #command = table.getNumber('Command', 0)
         if(command == 99): # Set Team Colors
-            arg = abs(table.getNumber('Argument', arg))
+            #arg = abs(table.getNumber('Argument', arg))
             if(arg == 1):
                 TeamColor1 = table.getNumberArray("Color", [0,0,0])
             if(arg == 2):
@@ -137,31 +166,31 @@ while NetworkTables.isConnected():
             ClearCommands()
                 
         if(command == 1): #Fill Color
-            color = table.getNumberArray('Color', [0,0,0])
+            #color = table.getNumberArray('Color', [0,0,0])
             ClearCommands()
-            pixels.fill((int_abs(color[0]), int_abs(color[1]), int_abs(color[2])))		
+            pixels.fill(gamma_enc(color))		
             pixels.show()
             
 
         if(command == 2): #Color Wipe
-            color = table.getNumberArray('Color', [0,0,0])
-            CheckDelay()
+            #color = table.getNumberArray('Color', [0,0,0])
+            #CheckDelay()
             ClearCommands()
             for i in range(0, num_pixels):
-                pixels[i] = (int_abs(color[0]), int_abs(color[1]), int_abs(color[2]))
+                pixels[i] = gamma_enc(color)
                 pixels.show()
                 SmartWait(delay)
                 if(command != 0):
                     break
 
         if(command == 3): # Rainbow
-            CheckDelay()
+            #CheckDelay()
             ClearCommands()
             while True:
                 for j in range(255):
                     for i in range(num_pixels):
                         pixel_index = (i * 256 // num_pixels) + j
-                        pixels[i] = wheel(pixel_index & 255)
+                        pixels[i] = gamma_enc(wheel(pixel_index & 255))
                     pixels.show()
                     SmartWait(delay)
                     if(command != 0):
@@ -170,16 +199,16 @@ while NetworkTables.isConnected():
                     break
 
         if(command == 4): # Team Color Cycle
-            CheckDelay()
-            arg = int(abs(table.getNumber('Argument', arg))) # Length of Section
+            #CheckDelay()
+            #arg = int(abs(table.getNumber('Argument', arg))) # Length of Section
             ClearCommands()
             count = 0
             while True:
                 for i in range(num_pixels):
                         if(count <= arg):
-                            pixels[i] = (int_abs(TeamColor1[0]), int_abs(TeamColor1[1]), int_abs(TeamColor1[2]))
+                            pixels[i] = gamma_enc(TeamColor1)
                         else:
-                            pixels[i] = (int_abs(TeamColor2[0]), int_abs(TeamColor2[1]), int_abs(TeamColor2[2]))
+                            pixels[i] = gamma_enc(TeamColor2)
                         count += 1
 
                         if(count > (2*arg)):
