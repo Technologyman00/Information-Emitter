@@ -22,16 +22,21 @@ team_number = settings_data.get("Team_Number")
 # Loads the Brightness from the JSON File
 # Loads the Pixel Order from the JSON File
 # Sets up the Pixel Array and Settings for the Pixels
-pixels = neopixel.NeoPixel(getattr(board, "D"+settings_data.get("Pin")), settings_data.get("num_LEDs"), brightness=settings_data.get("brightness"), auto_write=False, pixel_order=getattr(neopixel, settings_data.get("led_order")))
+
+ORDER = getattr(neopixel, settings_data.get("led_order"))
+num_pixels = settings_data.get("num_LEDs")
+
+pixels = neopixel.NeoPixel(getattr(board, "D"+settings_data.get("Pin")), num_pixels, brightness=settings_data.get("brightness"), auto_write=False, pixel_order=ORDER)
 
 cond = threading.Condition()
 notified = [False]
 
+# load the rest of the important user settings
 command = settings_data.get("startup_command")
 arg = settings_data.get("startup_arg")
-red = settings_data.get("startup_color")[0]
-green = settings_data.get("startup_color")[1]
-blue = settings_data.get("startup_color")[2]
+
+color = settings_data.get("startup_color")
+
 TeamColor1 = settings_data.get("Team_Color1")
 TeamColor2 = settings_data.get("Team_Color2")
 delay = settings_data.get("startup_delay")
@@ -93,17 +98,7 @@ def ClearCommands(command = 0, arg = 0, color = [0,0,0]):
     table.putNumber('Argument', arg)
     table.putNumberArray('Color', color)
 
-def GetColors():
-    global red #global allows it to set the outside scope variables
-    global green
-    global blue
-
-    color = table.getNumberArray('Color', [0,0,0])
-
-    red = int(abs(color[0]))
-    green = int(abs(color[1]))
-    blue = int(abs(color[2]))
-
+# Just split out as its reused constantly
 def CheckDelay():
     global delay
 
@@ -111,7 +106,7 @@ def CheckDelay():
     if(newdelay > 0):
         delay = newdelay
     
-
+# This delay is used instead of the time.sleep() as we want the LEDs to be as responsive as possible without locking the thread to pausing
 def SmartWait(delaytime_s):
     global command
     
@@ -139,18 +134,18 @@ while NetworkTables.isConnected():
             ClearCommands()
                 
         if(command == 1): #Fill Color
-            GetColors()
+            color = able.getNumberArray('Color', [0,0,0])
             ClearCommands()
-            pixels.fill((red,green,blue))		
+            pixels.fill((int(abs(color[0])), int(abs(color[1])), int(abs(color[2]))))		
             pixels.show()
             
 
         if(command == 2): #Color Wipe
-            GetColors()
+            color = table.getNumberArray('Color', [0,0,0])
             CheckDelay()
             ClearCommands()
             for i in range(0, num_pixels):
-                pixels[i] = (red, green, blue)
+                pixels[i] = (int(abs(color[0])), int(abs(color[1])), int(abs(color[2])))
                 pixels.show()
                 SmartWait(delay)
                 if(command != 0):
